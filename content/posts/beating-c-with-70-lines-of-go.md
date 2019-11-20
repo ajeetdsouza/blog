@@ -27,7 +27,12 @@ We will use the GNU [time](https://www.gnu.org/software/time/) utility to compar
 $ /usr/bin/time -f "%es %MKB" wc test.txt
 ```
 
-We will use the [same version of wc](https://opensource.apple.com/source/text_cmds/text_cmds-68/wc/wc.c.auto.html) as the original article, compiled with `gcc 9.2.1` and `-O3`. For our own implementation, we will use `go 1.13.4` (I did try `gccgo` too, but the results were not very promising).
+We will use the [same version of wc](https://opensource.apple.com/source/text_cmds/text_cmds-68/wc/wc.c.auto.html) as the original article, compiled with `gcc 9.2.1` and `-O3`. For our own implementation, we will use `go 1.13.4` (I did try `gccgo` too, but the results were not very promising). We will run all benchmarks with the following setup:
+
+- Intel Core i5-6200U @ 2.30 GHz (2 physical cores, 4 threads)
+- 4+4 GB RAM @ 2133 MHz
+- 240 GB M.2 SSD
+- Fedora 31
 
 For a fair comparison, all implementations will use a 16 KB buffer for reading input. The input will be two `us-ascii` encoded text files of 100 MB and 1 GB.
 

@@ -79,7 +79,14 @@
 
 <p>We will use the GNU <a href="https://www.gnu.org/software/time/" target="_blank">time</a> utility to compare elapsed time and maximum resident set size.</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ /usr/bin/time -f <span style="color:#4070a0">&#34;%es %MKB&#34;</span> wc test.txt</code></pre></div>
-<p>We will use the <a href="https://opensource.apple.com/source/text_cmds/text_cmds-68/wc/wc.c.auto.html" target="_blank">same version of wc</a> as the original article, compiled with <code>gcc 9.2.1</code> and <code>-O3</code>. For our own implementation, we will use <code>go 1.13.4</code> (I did try <code>gccgo</code> too, but the results were not very promising).</p>
+<p>We will use the <a href="https://opensource.apple.com/source/text_cmds/text_cmds-68/wc/wc.c.auto.html" target="_blank">same version of wc</a> as the original article, compiled with <code>gcc 9.2.1</code> and <code>-O3</code>. For our own implementation, we will use <code>go 1.13.4</code> (I did try <code>gccgo</code> too, but the results were not very promising). We will run all benchmarks with the following setup:</p>
+
+<ul>
+<li>Intel Core i5-6200U @ 2.30 GHz (2 physical cores, 4 threads)</li>
+<li>4+4 GB RAM @ 2133 MHz</li>
+<li>240 GB M.2 SSD</li>
+<li>Fedora 31</li>
+</ul>
 
 <p>For a fair comparison, all implementations will use a 16 KB buffer for reading input. The input will be two <code>us-ascii</code> encoded text files of 100 MB and 1 GB.</p>
 
