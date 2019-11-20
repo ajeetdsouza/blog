@@ -1,0 +1,40 @@
+baseURL = "https://ajeetdsouza.github.io/blog/"
+languageCode = "en-us"
+title = "Ajeet D'Souza"
+theme = "ink"
+
+publishDir = "docs"
+
+pygmentsCodeFences = true
+pygmentsStyle = "friendly"
+
+googleAnalytics = "UA-25405378-2"
+
+[blackfriday]
+hrefTargetBlank = true
+
+[params]
+customCSS = "css/custom.css"
+subtitle = "a tech blog"
+disableDisqusTypes = ["page", "post"]
+mainSections = ["page", "post"]
+
+[[params.social]]
+name = "Github"
+icon = "github"
+url = "https://github.com/ajeetdsouza/"
+
+[[params.social]]
+name = "LinkedIn"
+icon = "linkedin"
+url = "https://www.linkedin.com/in/ajeetdsouza/"
+
+[[params.social]]
+name = "Mail"
+icon = "mail"
+url = "mailto:98ajeet@gmail.com"
+
+[[params.social]]
+name = "RSS"
+icon = "rss"
+url = "/blog/index.xml"

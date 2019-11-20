@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ajeet D&#39;Souza</title>
+    <link>https://ajeetdsouza.github.io/blog/</link>
+    <description>Recent content on Ajeet D&#39;Souza</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 20 Nov 2019 08:09:39 +0530</lastBuildDate>
+    
+	<atom:link href="https://ajeetdsouza.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Beating C with 70 Lines of Go</title>
+      <link>https://ajeetdsouza.github.io/blog/posts/beating-c-with-70-lines-of-go/</link>
+      <pubDate>Wed, 20 Nov 2019 08:09:39 +0530</pubDate>
+      
+      <guid>https://ajeetdsouza.github.io/blog/posts/beating-c-with-70-lines-of-go/</guid>
+      <description>Chris Penner&amp;rsquo;s recent article, Beating C with 80 Lines of Haskell, has generated quite some controversy over the Internet, and it has since turned into a game of trying to take on the venerable wc with different languages:
+ Ada C Common Lisp Dyalog APL Futhark Haskell Rust  Today, we will be pitting Go against wc. Being a compiled language with excellent concurrency primitives, it should be trivial to achieve comparable performance to C.</description>
+    </item>
+    
+  </channel>
+</rss>

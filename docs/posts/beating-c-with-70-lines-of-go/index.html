@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>Beating C with 70 Lines of Go - Ajeet D&#39;Souza</title><meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta property="og:title" content="Beating C with 70 Lines of Go" />
+<meta property="og:description" content="Writing a faster wc utility in Go" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://ajeetdsouza.github.io/blog/posts/beating-c-with-70-lines-of-go/" />
+<meta property="article:published_time" content="2019-11-20T08:09:39+05:30" />
+<meta property="article:modified_time" content="2019-11-20T08:09:39+05:30" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Beating C with 70 Lines of Go"/>
+<meta name="twitter:description" content="Writing a faster wc utility in Go"/>
+<link href='https://fonts.googleapis.com/css?family=Playfair+Display:700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" media="screen" href="https://ajeetdsouza.github.io/blog/css/normalize.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="https://ajeetdsouza.github.io/blog/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="https://ajeetdsouza.github.io/blog/css/custom.css" />
+	
+
+	<script src="https://ajeetdsouza.github.io/blog/js/feather.min.js"></script>
+	
+		<script src="https://ajeetdsouza.github.io/blog/js/main.js"></script>
+</head>
+
+<body>
+	<div class="container wrapper">
+		<div class="header">
+	
+	<h1 class="site-title"><a href="https://ajeetdsouza.github.io/blog/">Ajeet D&#39;Souza</a></h1>
+	<div class="site-description"><p>a tech blog</p><nav class="nav social">
+			<ul class="flat"><li><a href="https://github.com/ajeetdsouza/" title="Github"><i data-feather="github"></i></a></li><li><a href="https://www.linkedin.com/in/ajeetdsouza/" title="LinkedIn"><i data-feather="linkedin"></i></a></li><li><a href="mailto:98ajeet@gmail.com" title="Mail"><i data-feather="mail"></i></a></li><li><a href="/blog/index.xml" title="RSS"><i data-feather="rss"></i></a></li></ul>
+		</nav>
+	</div>
+
+	<nav class="nav">
+		<ul class="flat">
+			
+		</ul>
+	</nav>
+</div>
+
+
+		<div class="post">
+			<div class="post-header">
+				
+					<div class="meta">
+						<div class="date">
+							<span class="day">20</span>
+							<span class="rest">Nov 2019</span>
+						</div>
+					</div>
+				
+				<div class="matter">
+					<h1 class="title">Beating C with 70 Lines of Go</h1>
+				</div>
+			</div>
+					
+			<div class="markdown">
+				
+
+<p>Chris Penner&rsquo;s recent article, <a href="https://chrispenner.ca/posts/wc" target="_blank">Beating C with 80 Lines of Haskell</a>, has generated quite some controversy over the Internet, and it has since turned into a game of trying to take on the venerable <code>wc</code> with different languages:</p>
+
+<ul>
+<li><a href="http://verisimilitudes.net/2019-11-11" target="_blank">Ada</a></li>
+<li><a href="https://github.com/expr-fi/fastlwc/" target="_blank">C</a></li>
+<li><a href="http://verisimilitudes.net/2019-11-12" target="_blank">Common Lisp</a></li>
+<li><a href="https://ummaycoc.github.io/wc.apl/" target="_blank">Dyalog APL</a></li>
+<li><a href="https://futhark-lang.org/blog/2019-10-25-beating-c-with-futhark-on-gpu.html" target="_blank">Futhark</a></li>
+<li><a href="https://chrispenner.ca/posts/wc" target="_blank">Haskell</a></li>
+<li><a href="https://medium.com/@martinmroz/beating-c-with-120-lines-of-rust-wc-a0db679fe920" target="_blank">Rust</a></li>
+</ul>
+
+<p>Today, we will be pitting <a href="http://golang.org/" target="_blank">Go</a> against <code>wc</code>. Being a compiled language with excellent concurrency primitives, it should be trivial to achieve <a href="https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/go-gcc.html" target="_blank">comparable performance</a> to C.</p>
+
+<p>Note that while <code>wc</code> is also designed to read from <code>stdin</code>, handle non-ASCII text encodings, and parse command line flags (<a href="https://ss64.com/osx/wc.html" target="_blank">manpage</a>), we will not be doing that here. Instead, like the articles mentioned above, we will focus on keeping our implementation as simple as possible.</p>
+
+<h2 id="benchmarking-comparison">Benchmarking &amp; comparison</h2>
+
+<p>We will use the GNU <a href="https://www.gnu.org/software/time/" target="_blank">time</a> utility to compare elapsed time and maximum resident set size.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ /usr/bin/time -f <span style="color:#4070a0">&#34;%es %MKB&#34;</span> wc test.txt</code></pre></div>
+<p>We will use the <a href="https://opensource.apple.com/source/text_cmds/text_cmds-68/wc/wc.c.auto.html" target="_blank">same version of wc</a> as the original article, compiled with <code>gcc 9.2.1</code> and <code>-O3</code>. For our own implementation, we will use <code>go 1.13.4</code> (I did try <code>gccgo</code> too, but the results were not very promising).</p>
+
+<p>For a fair comparison, all implementations will use a 16 KB buffer for reading input. The input will be two <code>us-ascii</code> encoded text files of 100 MB and 1 GB.</p>
+
+<h2 id="a-naïve-approach">A naïve approach</h2>
+
+<p>Parsing arguments is easy, since we only require the file path:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">if</span> <span style="color:#007020">len</span>(os.Args) &lt; <span style="color:#40a070">2</span> {
+    <span style="color:#007020">panic</span>(<span style="color:#4070a0">&#34;no file path specified&#34;</span>)
+}
+filePath <span style="color:#666">:=</span> os.Args[<span style="color:#40a070">1</span>]
+
+file, err <span style="color:#666">:=</span> os.<span style="color:#06287e">Open</span>(filePath)
+<span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
+    <span style="color:#007020">panic</span>(err)
+}
+<span style="color:#007020;font-weight:bold">defer</span> file.<span style="color:#06287e">Close</span>()</code></pre></div>
+<p>We&rsquo;re going to iterate through the text bytewise, keeping track of state. Fortunately, in this case, we require only 2 states:</p>
+
+<ul>
+<li>The previous byte was whitespace</li>
+<li>The previous byte was not whitespace</li>
+</ul>
+
+<p>When going from a whitespace character to a non-whitespace character, we increment the word counter. This approach allows us to read directly from a byte stream, keeping memory consumption low.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">const</span> bufferSize = <span style="color:#40a070">16</span> <span style="color:#666">*</span> <span style="color:#40a070">1024</span>
+reader <span style="color:#666">:=</span> bufio.<span style="color:#06287e">NewReaderSize</span>(file, bufferSize)
+
+lineCount <span style="color:#666">:=</span> <span style="color:#40a070">0</span>
+wordCount <span style="color:#666">:=</span> <span style="color:#40a070">0</span>
+byteCount <span style="color:#666">:=</span> <span style="color:#40a070">0</span>
+
+prevByteIsSpace <span style="color:#666">:=</span> <span style="color:#007020;font-weight:bold">true</span>
+<span style="color:#007020;font-weight:bold">for</span> {
+    b, err <span style="color:#666">:=</span> reader.<span style="color:#06287e">ReadByte</span>()
+    <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
+        <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">==</span> io.EOF {
+            <span style="color:#007020;font-weight:bold">break</span>
+        } <span style="color:#007020;font-weight:bold">else</span> {
+            <span style="color:#007020">panic</span>(err)
+        }
+    }
+
+    byteCount<span style="color:#666">++</span>
+
+    <span style="color:#007020;font-weight:bold">switch</span> b {
+    <span style="color:#007020;font-weight:bold">case</span> <span style="color:#4070a0">&#39;\n&#39;</span>:
+        lineCount<span style="color:#666">++</span>
+        prevByteIsSpace = <span style="color:#007020;font-weight:bold">true</span>
+    <span style="color:#007020;font-weight:bold">case</span> <span style="color:#4070a0">&#39; &#39;</span>, <span style="color:#4070a0">&#39;\t&#39;</span>, <span style="color:#4070a0">&#39;\r&#39;</span>, <span style="color:#4070a0">&#39;\v&#39;</span>, <span style="color:#4070a0">&#39;\f&#39;</span>:
+        prevByteIsSpace = <span style="color:#007020;font-weight:bold">true</span>
+    <span style="color:#007020;font-weight:bold">default</span>:
+        <span style="color:#007020;font-weight:bold">if</span> prevByteIsSpace {
+            wordCount<span style="color:#666">++</span>
+            prevByteIsSpace = <span style="color:#007020;font-weight:bold">false</span>
+        }
+    }
+}
+
+fmt.<span style="color:#06287e">Printf</span>(
+    <span style="color:#4070a0">&#34;%d %d %d %s\n&#34;</span>,
+    lineCount, wordCount,
+    byteCount,
+    file.<span style="color:#06287e">Name</span>(),
+)</code></pre></div>
+<p>Let&rsquo;s run this:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="right">input size</th>
+<th align="right">elapsed time</th>
+<th align="right">max memory</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.58 s</td>
+<td align="right">2052 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-naive</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.90s</td>
+<td align="right">1780 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">1 GB</td>
+<td align="right">5.56 s</td>
+<td align="right">2036 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-naive</code></td>
+<td align="right">1 GB</td>
+<td align="right">8.78 s</td>
+<td align="right">1736 KB</td>
+</tr>
+</tbody>
+</table>
+
+<p>The good news is that our first attempt has already landed us pretty close to C in terms of performance. In fact, we&rsquo;re actually doing <em>better</em> in terms of memory usage!</p>
+
+<h2 id="splitting-the-input">Splitting the input</h2>
+
+<p>While buffering I/O reads is critical to improving performance, calling <code>ReadByte()</code> and checking for errors in a loop introduces a lot of unnecessary overhead. We can avoid this by manually buffering our read calls, rather than relying on <code>bufio.Reader</code>.</p>
+
+<p>To do this, we will split our input into buffered chunks that can be processed individually. Fortunately, to process a chunk, the only thing we need to know about the previous chunk (as we saw earlier) is if its last character was whitespace.</p>
+
+<p>Let&rsquo;s write a few utility functions:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">type</span> Chunk <span style="color:#007020;font-weight:bold">struct</span> {
+    PrevCharIsSpace <span style="color:#902000">bool</span>
+    Buffer          []<span style="color:#902000">byte</span>
+}
+
+<span style="color:#007020;font-weight:bold">type</span> Count <span style="color:#007020;font-weight:bold">struct</span> {
+    LineCount <span style="color:#902000">int</span>
+    WordCount <span style="color:#902000">int</span>
+}
+
+<span style="color:#007020;font-weight:bold">func</span> <span style="color:#06287e">GetCount</span>(chunk Chunk) Count {
+    count <span style="color:#666">:=</span> Count{}
+
+    prevCharIsSpace <span style="color:#666">:=</span> chunk.PrevCharIsSpace
+    <span style="color:#007020;font-weight:bold">for</span> _, b <span style="color:#666">:=</span> <span style="color:#007020;font-weight:bold">range</span> chunk.Buffer {
+        <span style="color:#007020;font-weight:bold">switch</span> b {
+        <span style="color:#007020;font-weight:bold">case</span> <span style="color:#4070a0">&#39;\n&#39;</span>:
+            count.LineCount<span style="color:#666">++</span>
+            prevCharIsSpace = <span style="color:#007020;font-weight:bold">true</span>
+        <span style="color:#007020;font-weight:bold">case</span> <span style="color:#4070a0">&#39; &#39;</span>, <span style="color:#4070a0">&#39;\t&#39;</span>, <span style="color:#4070a0">&#39;\r&#39;</span>, <span style="color:#4070a0">&#39;\v&#39;</span>, <span style="color:#4070a0">&#39;\f&#39;</span>:
+            prevCharIsSpace = <span style="color:#007020;font-weight:bold">true</span>
+        <span style="color:#007020;font-weight:bold">default</span>:
+            <span style="color:#007020;font-weight:bold">if</span> prevCharIsSpace {
+                prevCharIsSpace = <span style="color:#007020;font-weight:bold">false</span>
+                count.WordCount<span style="color:#666">++</span>
+            }
+        }
+    }
+
+    <span style="color:#007020;font-weight:bold">return</span> count
+}
+
+<span style="color:#007020;font-weight:bold">func</span> <span style="color:#06287e">IsSpace</span>(b <span style="color:#902000">byte</span>) <span style="color:#902000">bool</span> {
+    <span style="color:#007020;font-weight:bold">return</span> b <span style="color:#666">==</span> <span style="color:#4070a0">&#39; &#39;</span> <span style="color:#666">||</span> b <span style="color:#666">==</span> <span style="color:#4070a0">&#39;\t&#39;</span> <span style="color:#666">||</span> b <span style="color:#666">==</span> <span style="color:#4070a0">&#39;\n&#39;</span> <span style="color:#666">||</span> b <span style="color:#666">==</span> <span style="color:#4070a0">&#39;\r&#39;</span> <span style="color:#666">||</span> b <span style="color:#666">==</span> <span style="color:#4070a0">&#39;\v&#39;</span> <span style="color:#666">||</span> b <span style="color:#666">==</span> <span style="color:#4070a0">&#39;\f&#39;</span>
+}</code></pre></div>
+<p>Now, we can split the input into <code>Chunk</code>s and feed them to the <code>GetCount</code> function.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">totalCount <span style="color:#666">:=</span> Count{}
+lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;font-weight:bold">true</span>
+
+<span style="color:#007020;font-weight:bold">const</span> bufferSize = <span style="color:#40a070">16</span> <span style="color:#666">*</span> <span style="color:#40a070">1024</span>
+buffer <span style="color:#666">:=</span> <span style="color:#007020">make</span>([]<span style="color:#902000">byte</span>, bufferSize)
+
+<span style="color:#007020;font-weight:bold">for</span> {
+    bytes, err <span style="color:#666">:=</span> file.<span style="color:#06287e">Read</span>(buffer)
+    <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
+        <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">==</span> io.EOF {
+            <span style="color:#007020;font-weight:bold">break</span>
+        } <span style="color:#007020;font-weight:bold">else</span> {
+            <span style="color:#007020">panic</span>(err)
+        }
+    }
+
+    count <span style="color:#666">:=</span> <span style="color:#06287e">GetCount</span>(Chunk{lastCharIsSpace, buffer[:bytes]})
+    lastCharIsSpace = <span style="color:#06287e">IsSpace</span>(buffer[bytes<span style="color:#666">-</span><span style="color:#40a070">1</span>])
+
+    totalCount.LineCount <span style="color:#666">+=</span> count.LineCount
+    totalCount.WordCount <span style="color:#666">+=</span> count.WordCount
+}</code></pre></div>
+<p>To obtain the byte count, we can make one system call to query the file size:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">fileStat, err <span style="color:#666">:=</span> file.<span style="color:#06287e">Stat</span>()
+<span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
+    <span style="color:#007020">panic</span>(err)
+}
+byteCount <span style="color:#666">:=</span> fileStat.<span style="color:#06287e">Size</span>()</code></pre></div>
+<p>Now that we&rsquo;re done, let&rsquo;s see how this performs:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="right">input size</th>
+<th align="right">elapsed time</th>
+<th align="right">max memory</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.58 s</td>
+<td align="right">2052 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-chunks</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.38 s</td>
+<td align="right">1864 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">1 GB</td>
+<td align="right">5.56 s</td>
+<td align="right">2036 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-chunks</code></td>
+<td align="right">1 GB</td>
+<td align="right">3.72 s</td>
+<td align="right">1864 KB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Looks like we&rsquo;ve blown past <code>wc</code> on both counts, and we haven&rsquo;t even begun to parallelize our program yet. <a href="https://github.com/XAMPPRocky/tokei" target="_blank"><code>tokei</code></a> reports that this program is just 70 lines of code!</p>
+
+<h2 id="parallelization">Parallelization</h2>
+
+<p>Admittedly, a parallel <code>wc</code> is overkill, but let&rsquo;s see how far we can go. The original article reads from the input file in parallel, and while it improved runtime, the author does admit that performance gains due to parallel reads might be limited to only certain kinds of storage, and would be detrimental elsewhere.</p>
+
+<p>For our implementation, we want our code to be performant on <em>all</em> devices, so we will not be doing this. We will set up 2 channels, <code>chunks</code> and <code>counts</code>. Each worker will read and process data from <code>chunks</code> until the channel is closed, and then write the result to <code>counts</code>.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">func</span> <span style="color:#06287e">ChunkCounter</span>(chunks <span style="color:#666">&lt;-</span><span style="color:#007020;font-weight:bold">chan</span> Chunk, counts <span style="color:#007020;font-weight:bold">chan</span><span style="color:#666">&lt;-</span> Count) {
+    totalCount <span style="color:#666">:=</span> Count{}
+    <span style="color:#007020;font-weight:bold">for</span> {
+        chunk, ok <span style="color:#666">:=</span> <span style="color:#666">&lt;-</span>chunks
+        <span style="color:#007020;font-weight:bold">if</span> !ok {
+            <span style="color:#007020;font-weight:bold">break</span>
+        }
+        count <span style="color:#666">:=</span> <span style="color:#06287e">GetCount</span>(chunk)
+        totalCount.LineCount <span style="color:#666">+=</span> count.LineCount
+        totalCount.WordCount <span style="color:#666">+=</span> count.WordCount
+    }
+    counts <span style="color:#666">&lt;-</span> totalCount
+}</code></pre></div>
+<p>We will spawn one worker per logical CPU core:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">numWorkers <span style="color:#666">:=</span> runtime.<span style="color:#06287e">NumCPU</span>()
+runtime.<span style="color:#06287e">GOMAXPROCS</span>(numWorkers)
+
+chunks <span style="color:#666">:=</span> <span style="color:#007020">make</span>(<span style="color:#007020;font-weight:bold">chan</span> Chunk)
+counts <span style="color:#666">:=</span> <span style="color:#007020">make</span>(<span style="color:#007020;font-weight:bold">chan</span> Count)
+
+<span style="color:#007020;font-weight:bold">for</span> i <span style="color:#666">:=</span> <span style="color:#40a070">0</span>; i &lt; numWorkers; i<span style="color:#666">++</span> {
+    <span style="color:#007020;font-weight:bold">go</span> <span style="color:#06287e">ChunkCounter</span>(chunks, counts)
+}</code></pre></div>
+<p>Now, we run in a loop, reading from the disk and assigning jobs to each worker:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">const</span> bufferSize = <span style="color:#40a070">16</span> <span style="color:#666">*</span> <span style="color:#40a070">1024</span>
+lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;font-weight:bold">true</span>
+
+<span style="color:#007020;font-weight:bold">for</span> {
+    buffer <span style="color:#666">:=</span> <span style="color:#007020">make</span>([]<span style="color:#902000">byte</span>, bufferSize)
+    bytes, err <span style="color:#666">:=</span> file.<span style="color:#06287e">Read</span>(buffer)
+    <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
+        <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">==</span> io.EOF {
+            <span style="color:#007020;font-weight:bold">break</span>
+        } <span style="color:#007020;font-weight:bold">else</span> {
+            <span style="color:#007020">panic</span>(err)
+        }
+    }
+    chunks <span style="color:#666">&lt;-</span> Chunk{lastCharIsSpace, buffer[:bytes]}
+    lastCharIsSpace = <span style="color:#06287e">IsSpace</span>(buffer[bytes<span style="color:#666">-</span><span style="color:#40a070">1</span>])
+}
+<span style="color:#007020">close</span>(chunks)</code></pre></div>
+<p>Once this is done, we can simply sum up the counts from each worker:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">totalCount <span style="color:#666">:=</span> Count{}
+<span style="color:#007020;font-weight:bold">for</span> i <span style="color:#666">:=</span> <span style="color:#40a070">0</span>; i &lt; numWorkers; i<span style="color:#666">++</span> {
+    count <span style="color:#666">:=</span> <span style="color:#666">&lt;-</span>counts
+    totalCount.LineCount <span style="color:#666">+=</span> count.LineCount
+    totalCount.WordCount <span style="color:#666">+=</span> count.WordCount
+}
+<span style="color:#007020">close</span>(counts)</code></pre></div>
+<p>Let&rsquo;s run this and see how it compares to the previous results:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="right">input size</th>
+<th align="right">elapsed time</th>
+<th align="right">max memory</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.58 s</td>
+<td align="right">2052 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-channel</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.21 s</td>
+<td align="right">6632 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">1 GB</td>
+<td align="right">5.56 s</td>
+<td align="right">2036 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-channel</code></td>
+<td align="right">1 GB</td>
+<td align="right">2.10 s</td>
+<td align="right">7520 KB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Our <code>wc</code> is now a lot faster, but there has been quite a regression in memory usage. In particular, notice how our input loop allocates memory at every iteration! Channels are a great abstraction over sharing memory, but for some use cases, simply <em>not</em> using channels can improve performance tremendously.</p>
+
+<h2 id="better-parallelization">Better parallelization</h2>
+
+<p>In this section, we will allow every worker to read from the file, and use <code>sync.Mutex</code> to ensure that reads don&rsquo;t happen simultaneously. We can create a new <code>struct</code> to handle this for us:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">type</span> FileReader <span style="color:#007020;font-weight:bold">struct</span> {
+    File            <span style="color:#666">*</span>os.File
+    LastCharIsSpace <span style="color:#902000">bool</span>
+    Mutex           sync.Mutex
+}
+
+<span style="color:#007020;font-weight:bold">func</span> (fileReader <span style="color:#666">*</span>FileReader) <span style="color:#06287e">Lock</span>() {
+    fileReader.Mutex.<span style="color:#06287e">Lock</span>()
+}
+
+<span style="color:#007020;font-weight:bold">func</span> (fileReader <span style="color:#666">*</span>FileReader) <span style="color:#06287e">Unlock</span>() {
+    fileReader.Mutex.<span style="color:#06287e">Unlock</span>()
+}
+
+<span style="color:#007020;font-weight:bold">func</span> (fileReader <span style="color:#666">*</span>FileReader) <span style="color:#06287e">ReadChunk</span>(buffer []<span style="color:#902000">byte</span>) (Chunk, <span style="color:#902000">error</span>) {
+    fileReader.<span style="color:#06287e">Lock</span>()
+    <span style="color:#007020;font-weight:bold">defer</span> fileReader.<span style="color:#06287e">Unlock</span>()
+
+    bytes, err <span style="color:#666">:=</span> fileReader.File.<span style="color:#06287e">Read</span>(buffer)
+    <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
+        <span style="color:#007020;font-weight:bold">return</span> Chunk{}, err
+    }
+
+    chunk <span style="color:#666">:=</span> Chunk{fileReader.LastCharIsSpace, buffer[:bytes]}
+    fileReader.LastCharIsSpace = <span style="color:#06287e">IsSpace</span>(buffer[bytes<span style="color:#666">-</span><span style="color:#40a070">1</span>])
+
+    <span style="color:#007020;font-weight:bold">return</span> chunk, <span style="color:#007020;font-weight:bold">nil</span>
+}</code></pre></div>
+<p>We then rewrite our worker function to read directly from the file:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">func</span> <span style="color:#06287e">FileReaderCounter</span>(fileReader <span style="color:#666">*</span>FileReader, counts <span style="color:#007020;font-weight:bold">chan</span> Count) {
+    <span style="color:#007020;font-weight:bold">const</span> bufferSize = <span style="color:#40a070">16</span> <span style="color:#666">*</span> <span style="color:#40a070">1024</span>
+    buffer <span style="color:#666">:=</span> <span style="color:#007020">make</span>([]<span style="color:#902000">byte</span>, bufferSize)
+
+    totalCount <span style="color:#666">:=</span> Count{}
+
+    <span style="color:#007020;font-weight:bold">for</span> {
+        chunk, err <span style="color:#666">:=</span> fileReader.<span style="color:#06287e">ReadChunk</span>(buffer)
+        <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
+            <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">==</span> io.EOF {
+                <span style="color:#007020;font-weight:bold">break</span>
+            } <span style="color:#007020;font-weight:bold">else</span> {
+                <span style="color:#007020">panic</span>(err)
+            }
+        }
+        count <span style="color:#666">:=</span> <span style="color:#06287e">GetCount</span>(chunk)
+        totalCount.LineCount <span style="color:#666">+=</span> count.LineCount
+        totalCount.WordCount <span style="color:#666">+=</span> count.WordCount
+    }
+
+    counts <span style="color:#666">&lt;-</span> totalCount
+}</code></pre></div>
+<p>Like earlier, we can now spawn these workers, one per CPU core:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">fileReader <span style="color:#666">:=</span> <span style="color:#666">&amp;</span>FileReader{
+    File:            file,
+    LastCharIsSpace: <span style="color:#007020;font-weight:bold">true</span>,
+}
+counts <span style="color:#666">:=</span> <span style="color:#007020">make</span>(<span style="color:#007020;font-weight:bold">chan</span> Count)
+
+<span style="color:#007020;font-weight:bold">for</span> i <span style="color:#666">:=</span> <span style="color:#40a070">0</span>; i &lt; numWorkers; i<span style="color:#666">++</span> {
+    <span style="color:#007020;font-weight:bold">go</span> <span style="color:#06287e">FileReaderCounter</span>(fileReader, counts)
+}
+
+totalCount <span style="color:#666">:=</span> Count{}
+<span style="color:#007020;font-weight:bold">for</span> i <span style="color:#666">:=</span> <span style="color:#40a070">0</span>; i &lt; numWorkers; i<span style="color:#666">++</span> {
+    count <span style="color:#666">:=</span> <span style="color:#666">&lt;-</span>counts
+    totalCount.LineCount <span style="color:#666">+=</span> count.LineCount
+    totalCount.WordCount <span style="color:#666">+=</span> count.WordCount
+}
+<span style="color:#007020">close</span>(counts)</code></pre></div>
+<p>Let&rsquo;s see how this performs:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="right">input size</th>
+<th align="right">elapsed time</th>
+<th align="right">max memory</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.58 s</td>
+<td align="right">2052 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-mutex</code></td>
+<td align="right">100 MB</td>
+<td align="right">0.15 s</td>
+<td align="right">2048 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc</code></td>
+<td align="right">1 GB</td>
+<td align="right">5.56 s</td>
+<td align="right">2036 KB</td>
+</tr>
+
+<tr>
+<td align="left"><code>wc-mutex</code></td>
+<td align="right">1 GB</td>
+<td align="right">1.53 s</td>
+<td align="right">2052 KB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Our parallelized implementation runs at more than 3.5x the speed of <code>wc</code>, while matching its memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>While in no way does this article imply that Go &gt; C, I hope it demonstrates that Go can be a viable alternative to C as a systems programming language.</p>
+
+<p>If you have suggestions, questions, or complaints, feel free to <a href="mailto:98ajeet@gmail.com" target="_blank">drop me a mail</a>!</p>
+
+			</div>
+
+			<div class="tags">
+				
+					
+				
+			</div></div>
+	</div>
+	<div class="footer wrapper">
+	<nav class="nav">
+		<div> <a href="https://github.com/knadh/hugo-ink">Ink</a> theme on <a href="https://gohugo.io">Hugo</a></div>
+	</nav>
+</div>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-25405378-2', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<script>feather.replace()</script>
+</body>
+</html>
