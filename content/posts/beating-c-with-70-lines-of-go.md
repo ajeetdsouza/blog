@@ -90,12 +90,7 @@ for {
     }
 }
 
-fmt.Printf(
-    "%d %d %d %s\n",
-    lineCount, wordCount,
-    byteCount,
-    file.Name(),
-)
+fmt.Printf("%d %d %d %s\n", lineCount, wordCount, byteCount, file.Name())
 ```
 
 Let's run this:
