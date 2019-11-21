@@ -143,9 +143,9 @@ prevByteIsSpace <span style="color:#666">:=</span> <span style="color:#007020;fo
             prevByteIsSpace = <span style="color:#007020;font-weight:bold">false</span>
         }
     }
-}
-
-fmt.<span style="color:#06287e">Printf</span>(<span style="color:#4070a0">&#34;%d %d %d %s\n&#34;</span>, lineCount, wordCount, byteCount, file.<span style="color:#06287e">Name</span>())</code></pre></div>
+}</code></pre></div>
+<p>To display the result, we will use the native <code>println()</code> function - in my tests, importing the <code>fmt</code> library caused a ~400 KB increase in executable size!</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020">println</span>(lineCount, wordCount, byteCount, file.<span style="color:#06287e">Name</span>())</code></pre></div>
 <p>Let&rsquo;s run this:</p>
 
 <table>
@@ -169,8 +169,8 @@ fmt.<span style="color:#06287e">Printf</span>(<span style="color:#4070a0">&#34;%
 <tr>
 <td align="left"><code>wc-naive</code></td>
 <td align="right">100 MB</td>
-<td align="right">0.90s</td>
-<td align="right">1780 KB</td>
+<td align="right">0.77 s</td>
+<td align="right">1416 kB</td>
 </tr>
 
 <tr>
@@ -183,8 +183,8 @@ fmt.<span style="color:#06287e">Printf</span>(<span style="color:#4070a0">&#34;%
 <tr>
 <td align="left"><code>wc-naive</code></td>
 <td align="right">1 GB</td>
-<td align="right">8.78 s</td>
-<td align="right">1736 KB</td>
+<td align="right">7.69 s</td>
+<td align="right">1416 KB</td>
 </tr>
 </tbody>
 </table>
@@ -285,8 +285,8 @@ byteCount <span style="color:#666">:=</span> fileStat.<span style="color:#06287e
 <tr>
 <td align="left"><code>wc-chunks</code></td>
 <td align="right">100 MB</td>
-<td align="right">0.38 s</td>
-<td align="right">1864 KB</td>
+<td align="right">0.34 s</td>
+<td align="right">1404 KB</td>
 </tr>
 
 <tr>
@@ -299,8 +299,8 @@ byteCount <span style="color:#666">:=</span> fileStat.<span style="color:#06287e
 <tr>
 <td align="left"><code>wc-chunks</code></td>
 <td align="right">1 GB</td>
-<td align="right">3.72 s</td>
-<td align="right">1864 KB</td>
+<td align="right">3.31 s</td>
+<td align="right">1416 KB</td>
 </tr>
 </tbody>
 </table>
@@ -383,8 +383,8 @@ lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;fo
 <tr>
 <td align="left"><code>wc-channel</code></td>
 <td align="right">100 MB</td>
-<td align="right">0.29 s</td>
-<td align="right">6904 KB</td>
+<td align="right">0.27 s</td>
+<td align="right">6644 KB</td>
 </tr>
 
 <tr>
@@ -397,8 +397,8 @@ lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;fo
 <tr>
 <td align="left"><code>wc-channel</code></td>
 <td align="right">1 GB</td>
-<td align="right">2.30 s</td>
-<td align="right">7328 KB</td>
+<td align="right">2.22 s</td>
+<td align="right">6752 KB</td>
 </tr>
 </tbody>
 </table>
@@ -493,7 +493,7 @@ totalCount <span style="color:#666">:=</span> Count{}
 <td align="left"><code>wc-mutex</code></td>
 <td align="right">100 MB</td>
 <td align="right">0.12 s</td>
-<td align="right">2036 KB</td>
+<td align="right">1580 KB</td>
 </tr>
 
 <tr>
@@ -506,13 +506,13 @@ totalCount <span style="color:#666">:=</span> Count{}
 <tr>
 <td align="left"><code>wc-mutex</code></td>
 <td align="right">1 GB</td>
-<td align="right">1.20 s</td>
-<td align="right">2092 KB</td>
+<td align="right">1.21 s</td>
+<td align="right">1576 KB</td>
 </tr>
 </tbody>
 </table>
 
-<p>Our parallelized implementation runs at more than 4.5x the speed of <code>wc</code>, while matching its memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.</p>
+<p>Our parallelized implementation runs at more than 4.5x the speed of <code>wc</code>, with lower memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 

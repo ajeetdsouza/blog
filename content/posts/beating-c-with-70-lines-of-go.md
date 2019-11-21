@@ -94,8 +94,12 @@ for {
         }
     }
 }
+```
 
-fmt.Printf("%d %d %d %s\n", lineCount, wordCount, byteCount, file.Name())
+To display the result, we will use the native `println()` function - in my tests, importing the `fmt` library caused a ~400 KB increase in executable size!
+
+```go
+println(lineCount, wordCount, byteCount, file.Name())
 ```
 
 Let's run this:
@@ -103,9 +107,9 @@ Let's run this:
 |            | input size | elapsed time | max memory |
 |:---------- | ----------:| ------------:| ----------:|
 | `wc`       |     100 MB |       0.58 s |    2052 KB |
-| `wc-naive` |     100 MB |       0.90s  |    1780 KB |
+| `wc-naive` |     100 MB |       0.77 s |    1416 kB |
 | `wc`       |       1 GB |       5.56 s |    2036 KB |
-| `wc-naive` |       1 GB |       8.78 s |    1736 KB |
+| `wc-naive` |       1 GB |       7.69 s |    1416 KB |
 
 The good news is that our first attempt has already landed us pretty close to C in terms of performance. In fact, we're actually doing _better_ in terms of memory usage!
 
@@ -197,9 +201,9 @@ Now that we're done, let's see how this performs:
 |             | input size | elapsed time | max memory |
 |:----------- | ----------:| ------------:| ----------:|
 | `wc`        |     100 MB |       0.58 s |    2052 KB |
-| `wc-chunks` |     100 MB |       0.38 s |    1864 KB |
+| `wc-chunks` |     100 MB |       0.34 s |    1404 KB |
 | `wc`        |       1 GB |       5.56 s |    2036 KB |
-| `wc-chunks` |       1 GB |       3.72 s |    1864 KB |
+| `wc-chunks` |       1 GB |       3.31 s |    1416 KB |
 
 Looks like we've blown past `wc` on both counts, and we haven't even begun to parallelize our program yet. [`tokei`](https://github.com/XAMPPRocky/tokei) reports that this program is just 70 lines of code!
 
@@ -277,9 +281,9 @@ Let's run this and see how it compares to the previous results:
 |              | input size | elapsed time | max memory |
 |:------------ | ----------:| ------------:| ----------:|
 | `wc`         |     100 MB |       0.58 s |    2052 KB |
-| `wc-channel` |     100 MB |       0.29 s |    6904 KB |
+| `wc-channel` |     100 MB |       0.27 s |    6644 KB |
 | `wc`         |       1 GB |       5.56 s |    2036 KB |
-| `wc-channel` |       1 GB |       2.30 s |    7328 KB |
+| `wc-channel` |       1 GB |       2.22 s |    6752 KB |
 
 Our `wc` is now a lot faster, but there has been quite a regression in memory usage. In particular, notice how our input loop allocates memory at every iteration! Channels are a great abstraction over sharing memory, but for some use cases, simply _not_ using channels can improve performance tremendously.
 
@@ -364,11 +368,11 @@ Let's see how this performs:
 |            | input size | elapsed time | max memory |
 |:---------- | ----------:| ------------:| ----------:|
 | `wc`       |     100 MB |       0.58 s |    2052 KB |
-| `wc-mutex` |     100 MB |       0.12 s |    2036 KB |
+| `wc-mutex` |     100 MB |       0.12 s |    1580 KB |
 | `wc`       |       1 GB |       5.56 s |    2036 KB |
-| `wc-mutex` |       1 GB |       1.20 s |    2092 KB |
+| `wc-mutex` |       1 GB |       1.21 s |    1576 KB |
 
-Our parallelized implementation runs at more than 4.5x the speed of `wc`, while matching its memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.
+Our parallelized implementation runs at more than 4.5x the speed of `wc`, with lower memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.
 
 ## Conclusion
 
