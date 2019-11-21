@@ -412,15 +412,7 @@ lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;fo
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">type</span> FileReader <span style="color:#007020;font-weight:bold">struct</span> {
     File            <span style="color:#666">*</span>os.File
     LastCharIsSpace <span style="color:#902000">bool</span>
-    Mutex           sync.Mutex
-}
-
-<span style="color:#007020;font-weight:bold">func</span> (fileReader <span style="color:#666">*</span>FileReader) <span style="color:#06287e">Lock</span>() {
-    fileReader.Mutex.<span style="color:#06287e">Lock</span>()
-}
-
-<span style="color:#007020;font-weight:bold">func</span> (fileReader <span style="color:#666">*</span>FileReader) <span style="color:#06287e">Unlock</span>() {
-    fileReader.Mutex.<span style="color:#06287e">Unlock</span>()
+    sync.Mutex
 }
 
 <span style="color:#007020;font-weight:bold">func</span> (fileReader <span style="color:#666">*</span>FileReader) <span style="color:#06287e">ReadChunk</span>(buffer []<span style="color:#902000">byte</span>) (Chunk, <span style="color:#902000">error</span>) {

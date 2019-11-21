@@ -292,15 +292,7 @@ In this section, we will allow every worker to read from the file, and use `sync
 type FileReader struct {
     File            *os.File
     LastCharIsSpace bool
-    Mutex           sync.Mutex
-}
-
-func (fileReader *FileReader) Lock() {
-    fileReader.Mutex.Lock()
-}
-
-func (fileReader *FileReader) Unlock() {
-    fileReader.Mutex.Unlock()
+    sync.Mutex
 }
 
 func (fileReader *FileReader) ReadChunk(buffer []byte) (Chunk, error) {
