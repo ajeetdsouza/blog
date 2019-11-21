@@ -229,7 +229,6 @@ We will spawn one worker per logical CPU core:
 
 ```go
 numWorkers := runtime.NumCPU()
-runtime.GOMAXPROCS(numWorkers)
 
 chunks := make(chan Chunk)
 counts := make(chan Count)
@@ -278,9 +277,9 @@ Let's run this and see how it compares to the previous results:
 |              | input size | elapsed time | max memory |
 |:------------ | ----------:| ------------:| ----------:|
 | `wc`         |     100 MB |       0.58 s |    2052 KB |
-| `wc-channel` |     100 MB |       0.21 s |    6632 KB |
+| `wc-channel` |     100 MB |       0.29 s |    6904 KB |
 | `wc`         |       1 GB |       5.56 s |    2036 KB |
-| `wc-channel` |       1 GB |       2.10 s |    7520 KB |
+| `wc-channel` |       1 GB |       2.30 s |    7328 KB |
 
 Our `wc` is now a lot faster, but there has been quite a regression in memory usage. In particular, notice how our input loop allocates memory at every iteration! Channels are a great abstraction over sharing memory, but for some use cases, simply _not_ using channels can improve performance tremendously.
 
@@ -292,12 +291,12 @@ In this section, we will allow every worker to read from the file, and use `sync
 type FileReader struct {
     File            *os.File
     LastCharIsSpace bool
-    sync.Mutex
+    mutex           sync.Mutex
 }
 
 func (fileReader *FileReader) ReadChunk(buffer []byte) (Chunk, error) {
-    fileReader.Lock()
-    defer fileReader.Unlock()
+    fileReader.mutex.Lock()
+    defer fileReader.mutex.Unlock()
 
     bytes, err := fileReader.File.Read(buffer)
     if err != nil {
@@ -365,11 +364,11 @@ Let's see how this performs:
 |            | input size | elapsed time | max memory |
 |:---------- | ----------:| ------------:| ----------:|
 | `wc`       |     100 MB |       0.58 s |    2052 KB |
-| `wc-mutex` |     100 MB |       0.15 s |    2048 KB |
+| `wc-mutex` |     100 MB |       0.12 s |    2036 KB |
 | `wc`       |       1 GB |       5.56 s |    2036 KB |
-| `wc-mutex` |       1 GB |       1.53 s |    2052 KB |
+| `wc-mutex` |       1 GB |       1.20 s |    2092 KB |
 
-Our parallelized implementation runs at more than 3.5x the speed of `wc`, while matching its memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.
+Our parallelized implementation runs at more than 4.5x the speed of `wc`, while matching its memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.
 
 ## Conclusion
 

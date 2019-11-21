@@ -327,7 +327,6 @@ byteCount <span style="color:#666">:=</span> fileStat.<span style="color:#06287e
 }</code></pre></div>
 <p>We will spawn one worker per logical CPU core:</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">numWorkers <span style="color:#666">:=</span> runtime.<span style="color:#06287e">NumCPU</span>()
-runtime.<span style="color:#06287e">GOMAXPROCS</span>(numWorkers)
 
 chunks <span style="color:#666">:=</span> <span style="color:#007020">make</span>(<span style="color:#007020;font-weight:bold">chan</span> Chunk)
 counts <span style="color:#666">:=</span> <span style="color:#007020">make</span>(<span style="color:#007020;font-weight:bold">chan</span> Count)
@@ -384,8 +383,8 @@ lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;fo
 <tr>
 <td align="left"><code>wc-channel</code></td>
 <td align="right">100 MB</td>
-<td align="right">0.21 s</td>
-<td align="right">6632 KB</td>
+<td align="right">0.29 s</td>
+<td align="right">6904 KB</td>
 </tr>
 
 <tr>
@@ -398,8 +397,8 @@ lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;fo
 <tr>
 <td align="left"><code>wc-channel</code></td>
 <td align="right">1 GB</td>
-<td align="right">2.10 s</td>
-<td align="right">7520 KB</td>
+<td align="right">2.30 s</td>
+<td align="right">7328 KB</td>
 </tr>
 </tbody>
 </table>
@@ -412,12 +411,12 @@ lastCharIsSpace <span style="color:#666">:=</span> <span style="color:#007020;fo
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#007020;font-weight:bold">type</span> FileReader <span style="color:#007020;font-weight:bold">struct</span> {
     File            <span style="color:#666">*</span>os.File
     LastCharIsSpace <span style="color:#902000">bool</span>
-    sync.Mutex
+    mutex           sync.Mutex
 }
 
 <span style="color:#007020;font-weight:bold">func</span> (fileReader <span style="color:#666">*</span>FileReader) <span style="color:#06287e">ReadChunk</span>(buffer []<span style="color:#902000">byte</span>) (Chunk, <span style="color:#902000">error</span>) {
-    fileReader.<span style="color:#06287e">Lock</span>()
-    <span style="color:#007020;font-weight:bold">defer</span> fileReader.<span style="color:#06287e">Unlock</span>()
+    fileReader.mutex.<span style="color:#06287e">Lock</span>()
+    <span style="color:#007020;font-weight:bold">defer</span> fileReader.mutex.<span style="color:#06287e">Unlock</span>()
 
     bytes, err <span style="color:#666">:=</span> fileReader.File.<span style="color:#06287e">Read</span>(buffer)
     <span style="color:#007020;font-weight:bold">if</span> err <span style="color:#666">!=</span> <span style="color:#007020;font-weight:bold">nil</span> {
@@ -493,8 +492,8 @@ totalCount <span style="color:#666">:=</span> Count{}
 <tr>
 <td align="left"><code>wc-mutex</code></td>
 <td align="right">100 MB</td>
-<td align="right">0.15 s</td>
-<td align="right">2048 KB</td>
+<td align="right">0.12 s</td>
+<td align="right">2036 KB</td>
 </tr>
 
 <tr>
@@ -507,13 +506,13 @@ totalCount <span style="color:#666">:=</span> Count{}
 <tr>
 <td align="left"><code>wc-mutex</code></td>
 <td align="right">1 GB</td>
-<td align="right">1.53 s</td>
-<td align="right">2052 KB</td>
+<td align="right">1.20 s</td>
+<td align="right">2092 KB</td>
 </tr>
 </tbody>
 </table>
 
-<p>Our parallelized implementation runs at more than 3.5x the speed of <code>wc</code>, while matching its memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.</p>
+<p>Our parallelized implementation runs at more than 4.5x the speed of <code>wc</code>, while matching its memory consumption! This is pretty significant, especially if you consider that Go is a garbage collected language.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
