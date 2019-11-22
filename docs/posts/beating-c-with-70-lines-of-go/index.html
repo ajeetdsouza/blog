@@ -73,7 +73,9 @@
 
 <p>Today, we will be pitting <a href="http://golang.org/" target="_blank">Go</a> against <code>wc</code>. Being a compiled language with excellent concurrency primitives, it should be trivial to achieve <a href="https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/go-gcc.html" target="_blank">comparable performance</a> to C.</p>
 
-<p>Note that while <code>wc</code> is also designed to read from <code>stdin</code>, handle non-ASCII text encodings, and parse command line flags (<a href="https://ss64.com/osx/wc.html" target="_blank">manpage</a>), we will not be doing that here. Instead, like the articles mentioned above, we will focus on keeping our implementation as simple as possible.</p>
+<p>While <code>wc</code> is also designed to read from <code>stdin</code>, handle non-ASCII text encodings, and parse command line flags (<a href="https://ss64.com/osx/wc.html" target="_blank">manpage</a>), we will not be doing that here. Instead, like the articles mentioned above, we will focus on keeping our implementation as simple as possible.</p>
+
+<p>The source code for this post can be found <a href="https://github.com/ajeetdsouza/blog-wc-go" target="_blank">here</a>.</p>
 
 <h2 id="benchmarking-comparison">Benchmarking &amp; comparison</h2>
 

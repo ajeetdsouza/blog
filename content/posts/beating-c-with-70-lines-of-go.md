@@ -17,7 +17,9 @@ Chris Penner's recent article, [Beating C with 80 Lines of Haskell](https://chri
 
 Today, we will be pitting [Go](http://golang.org/) against `wc`. Being a compiled language with excellent concurrency primitives, it should be trivial to achieve [comparable performance](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/go-gcc.html) to C.
 
-Note that while `wc` is also designed to read from `stdin`, handle non-ASCII text encodings, and parse command line flags ([manpage](https://ss64.com/osx/wc.html)), we will not be doing that here. Instead, like the articles mentioned above, we will focus on keeping our implementation as simple as possible.
+While `wc` is also designed to read from `stdin`, handle non-ASCII text encodings, and parse command line flags ([manpage](https://ss64.com/osx/wc.html)), we will not be doing that here. Instead, like the articles mentioned above, we will focus on keeping our implementation as simple as possible.
+
+The source code for this post can be found [here](https://github.com/ajeetdsouza/blog-wc-go).
 
 ## Benchmarking & comparison
 
