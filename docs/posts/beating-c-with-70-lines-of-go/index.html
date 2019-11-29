@@ -307,7 +307,7 @@ byteCount <span style="color:#666">:=</span> fileStat.<span style="color:#06287e
 </tbody>
 </table>
 
-<p>Looks like we&rsquo;ve blown past <code>wc</code> on both counts, and we haven&rsquo;t even begun to parallelize our program yet. <a href="https://github.com/XAMPPRocky/tokei" target="_blank"><code>tokei</code></a> reports that this program is just 70 lines of code!</p>
+<p>Looks like we&rsquo;ve blown past <code>wc</code> on both counts, and we haven&rsquo;t even begun to parallelize our program yet.<sup class="footnote-ref" id="fnref:1"><a href="#fn:1">1</a></sup> <a href="https://github.com/XAMPPRocky/tokei" target="_blank"><code>tokei</code></a> reports that this program is just 70 lines of code!</p>
 
 <h2 id="parallelization">Parallelization</h2>
 
@@ -521,6 +521,15 @@ totalCount <span style="color:#666">:=</span> Count{}
 <p>While in no way does this article imply that Go &gt; C, I hope it demonstrates that Go can be a viable alternative to C as a systems programming language.</p>
 
 <p>If you have suggestions, questions, or complaints, feel free to <a href="mailto:98ajeet@gmail.com" target="_blank">drop me a mail</a>!</p>
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:1"><strong>How is this possible?</strong> Being a garbage-collected language with a runtime, one would not expect Go to beat C in a fair test. Upon closer inspection of the source code, we see the main reason this is happening - <code>wc</code> is calling <code>iswspace()</code> in a loop, which is built to support wide characters as well as different locales. Our implementation uses a much more naïve comparison, and changing the C code to reflect this gives us a major performance boost there too!
+ <a class="footnote-return" href="#fnref:1"><sup>[return]</sup></a></li>
+</ol>
+</div>
 
 			</div>
 

@@ -207,7 +207,7 @@ Now that we're done, let's see how this performs:
 | `wc`        |       1 GB |       5.56 s |    2036 KB |
 | `wc-chunks` |       1 GB |       3.31 s |    1416 KB |
 
-Looks like we've blown past `wc` on both counts, and we haven't even begun to parallelize our program yet. [`tokei`](https://github.com/XAMPPRocky/tokei) reports that this program is just 70 lines of code!
+Looks like we've blown past `wc` on both counts, and we haven't even begun to parallelize our program yet.[^1] [`tokei`](https://github.com/XAMPPRocky/tokei) reports that this program is just 70 lines of code!
 
 ## Parallelization
 
@@ -381,3 +381,5 @@ Our parallelized implementation runs at more than 4.5x the speed of `wc`, with l
 While in no way does this article imply that Go > C, I hope it demonstrates that Go can be a viable alternative to C as a systems programming language.
 
 If you have suggestions, questions, or complaints, feel free to [drop me a mail](mailto:98ajeet@gmail.com)!
+
+[^1]: **How is this possible?** Being a garbage-collected language with a runtime, one would not expect Go to beat C in a fair test. Upon closer inspection of the source code, we see the main reason this is happening - `wc` is calling `iswspace()` in a loop, which is built to support wide characters as well as different locales. Our implementation uses a much more naïve comparison, and changing the C code to reflect this gives us a major performance boost there too!
