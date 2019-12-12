@@ -5,7 +5,7 @@ date: 2019-11-20T08:09:39+05:30
 type: "post"
 ---
 
-Chris Penner's recent article, [Beating C with 80 Lines of Haskell](https://chrispenner.ca/posts/wc), has generated quite some controversy over the Internet, and it has since turned into a game of trying to take on the venerable `wc` with different languages:
+Chris Penner's recent article, [*Beating C with 80 Lines of Haskell*](https://chrispenner.ca/posts/wc), has generated quite some controversy over the Internet, and it has since turned into a game of trying to take on the venerable `wc` with different languages:
 
 - [Ada](http://verisimilitudes.net/2019-11-11)
 - [C](https://github.com/expr-fi/fastlwc/)
