@@ -4,16 +4,21 @@
   
   <url>
     <loc>https://ajeetdsouza.github.io/blog/</loc>
-    <lastmod>2019-11-20T08:09:39+05:30</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://ajeetdsouza.github.io/blog/posts/beating-c-with-70-lines-of-go/</loc>
-    <lastmod>2019-11-20T08:09:39+05:30</lastmod>
+    <lastmod>2019-12-13T06:26:33+05:30</lastmod>
   </url>
   
   <url>
     <loc>https://ajeetdsouza.github.io/blog/posts/</loc>
+    <lastmod>2019-12-13T06:26:33+05:30</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ajeetdsouza.github.io/blog/posts/type-safe-raytracing-in-modern-cpp/</loc>
+    <lastmod>2019-12-13T06:26:33+05:30</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ajeetdsouza.github.io/blog/posts/beating-c-with-70-lines-of-go/</loc>
     <lastmod>2019-11-20T08:09:39+05:30</lastmod>
   </url>
   

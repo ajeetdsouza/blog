@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Ajeet D&#39;Souza</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 20 Nov 2019 08:09:39 +0530</lastBuildDate>
+    <lastBuildDate>Fri, 13 Dec 2019 06:26:33 +0530</lastBuildDate>
     
 	<atom:link href="https://ajeetdsouza.github.io/blog/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Type-Safe Raytracing in Modern C&#43;&#43;</title>
+      <link>https://ajeetdsouza.github.io/blog/posts/type-safe-raytracing-in-modern-cpp/</link>
+      <pubDate>Fri, 13 Dec 2019 06:26:33 +0530</pubDate>
+      
+      <guid>https://ajeetdsouza.github.io/blog/posts/type-safe-raytracing-in-modern-cpp/</guid>
+      <description>C++ has a very powerful type system. More often than not, however, this type system goes underutilized, leading to error-prone code and preventable bugs. Of late, I&#39;ve been working through Peter Shirley&#39;s book, Raytracing in One Weekend, and as I was following along, I ran into subtle issues that I felt could have been caught at compile time, had I used C++&#39;s type system more effectively. Today, we will try to design types that make our code safer by preventing a number of such errors - at no runtime cost.</description>
+    </item>
     
     <item>
       <title>Beating C with 70 Lines of Go</title>
