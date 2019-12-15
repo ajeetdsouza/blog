@@ -60,7 +60,7 @@ Given the following data types, we can define some arithmetic operators on them:
 BoundVec3 + FreeVec3 = BoundVec3
 BoundVec3 - FreeVec3 = BoundVec3
 
-BoundVec3 - BoundVec3 = BoundVec3
+BoundVec3 - BoundVec3 = FreeVec3
 
 FreeVec3 + FreeVec3 = FreeVec3
 FreeVec3 - FreeVec3 = FreeVec3
