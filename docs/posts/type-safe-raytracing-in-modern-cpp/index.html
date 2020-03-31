@@ -57,7 +57,7 @@
 			</div>
 					
 			<div class="markdown">
-				<p>C++ has a very powerful type system. More often than not, however, this type system goes underutilized, leading to error-prone code and preventable bugs. Of late, I've been working through Peter Shirley's book, <a href="https://raytracing.github.io/books/RayTracingInOneWeekend.html"><em>Raytracing in One Weekend</em></a>, and as I was following along, I ran into subtle issues that I felt could have been caught at compile time, had I used C++'s type system more effectively. Today, we will try to design types that make our code safer by preventing a number of such errors - at no runtime cost.</p>
+				<p>C++ has a very powerful type system. More often than not, however, this type system goes underutilized, leading to error-prone code and preventable bugs. Of late, I&rsquo;ve been working through Peter Shirley&rsquo;s book, <a href="https://raytracing.github.io/books/RayTracingInOneWeekend.html"><em>Raytracing in One Weekend</em></a>, and as I was following along, I ran into subtle issues that I felt could have been caught at compile time, had I used C++'s type system more effectively. Today, we will try to design types that make our code safer by preventing a number of such errors - at no runtime cost.</p>
 <h2 id="the-basic-idea">The basic idea</h2>
 <p>The most fundamental data structure of a raytracer is the humble 3D vector. The book defines it as follows:</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#007020;font-weight:bold">class</span> <span style="color:#0e84b5;font-weight:bold">vec3</span> {
@@ -76,12 +76,12 @@
   <span style="color:#007020;font-weight:bold">inline</span> <span style="color:#902000">float</span> <span style="color:#007020;font-weight:bold">operator</span>[](<span style="color:#902000">int</span> i) <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> e[i]; }
   <span style="color:#007020;font-weight:bold">inline</span> <span style="color:#902000">float</span><span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span>[](<span style="color:#902000">int</span> i) { <span style="color:#007020;font-weight:bold">return</span> e[i]; }
 
-  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
-  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
-  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">*</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
-  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">/</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
-  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">*</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> <span style="color:#902000">float</span> t);
-  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">/</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> <span style="color:#902000">float</span> t);
+  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
+  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
+  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">*=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
+  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">/=</span>(<span style="color:#007020;font-weight:bold">const</span> vec3 <span style="color:#666">&amp;</span>v2);
+  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">*=</span>(<span style="color:#007020;font-weight:bold">const</span> <span style="color:#902000">float</span> t);
+  <span style="color:#007020;font-weight:bold">inline</span> vec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">/=</span>(<span style="color:#007020;font-weight:bold">const</span> <span style="color:#902000">float</span> t);
 
   <span style="color:#007020;font-weight:bold">inline</span> <span style="color:#902000">float</span> <span style="color:#06287e">length</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> sqrt(e[<span style="color:#40a070">0</span>]<span style="color:#666">*</span>e[<span style="color:#40a070">0</span>] <span style="color:#666">+</span> e[<span style="color:#40a070">1</span>]<span style="color:#666">*</span>e[<span style="color:#40a070">1</span>] <span style="color:#666">+</span> e[<span style="color:#40a070">2</span>]<span style="color:#666">*</span>e[<span style="color:#40a070">2</span>]); }
   <span style="color:#007020;font-weight:bold">inline</span> <span style="color:#902000">float</span> <span style="color:#06287e">squared_length</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> e[<span style="color:#40a070">0</span>]<span style="color:#666">*</span>e[<span style="color:#40a070">0</span>] <span style="color:#666">+</span> e[<span style="color:#40a070">1</span>]<span style="color:#666">*</span>e[<span style="color:#40a070">1</span>] <span style="color:#666">+</span> e[<span style="color:#40a070">2</span>]<span style="color:#666">*</span>e[<span style="color:#40a070">2</span>]; }
@@ -91,7 +91,7 @@
 };
 </code></pre></div><p>This allows us to reuse the <code>vec3</code> type for all vectors and colors, and defines every operator one might need. For a book on raytracing, this is convenient, since it keeps the code compact and simple. However, it also leads to code that is more error-prone, especially for larger projects.</p>
 <h2 id="a-bit-of-theory">A bit of theory</h2>
-<p>Let's analyze the case of a Euclidean vector. <a href="https://en.wikipedia.org/wiki/Euclidean_vector">Wikipedia</a> tells us that a Euclidean vector is a geometric object that has magnitude. It has 2 types:</p>
+<p>Let&rsquo;s analyze the case of a Euclidean vector. <a href="https://en.wikipedia.org/wiki/Euclidean_vector">Wikipedia</a> tells us that a Euclidean vector is a geometric object that has magnitude. It has 2 types:</p>
 <ul>
 <li>A <strong>bound vector</strong> has a fixed starting and ending point. They represent a <em>fixed point in space</em>, relative to some frame of reference. If we fix the starting point at the origin, this bound vector can represent the Cartesian coordinate of a point relative to the origin.</li>
 <li>A <strong>free vector</strong> has no initial point - it only has <em>direction</em> and <em>magnitude</em>.</li>
@@ -117,7 +117,7 @@ UnitVec3 / scalar = FreeVec3
 </code></pre><h2 id="the-code">The code</h2>
 <p>For our data structures, we will make use of <code>double</code> rather than <code>float</code>. However, we want to be able to switch between them easily if needed, so we create a type alias:</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#007020;font-weight:bold">using</span> value_type <span style="color:#666">=</span> <span style="color:#902000">double</span>;
-</code></pre></div><p>Let's define a Euclidean vector and its two subtypes. As per the definition, it has just one property - its <code>length()</code>.</p>
+</code></pre></div><p>Let&rsquo;s define a Euclidean vector and its two subtypes. As per the definition, it has just one property - its <code>length()</code>.</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">Vec3</span> {
  <span style="color:#007020;font-weight:bold">private</span><span style="color:#666">:</span>
   value_type _x;
@@ -128,34 +128,34 @@ UnitVec3 / scalar = FreeVec3
   <span style="color:#007020;font-weight:bold">constexpr</span> Vec3(<span style="color:#007020;font-weight:bold">const</span> value_type x, <span style="color:#007020;font-weight:bold">const</span> value_type y, <span style="color:#007020;font-weight:bold">const</span> value_type z)
       <span style="color:#666">:</span> _x{x}, _y{y}, _z{z} {}
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">x</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>_x; }
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">y</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>_y; }
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">z</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>_z; }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">x</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>_x; }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">y</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>_y; }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">z</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>_z; }
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type<span style="color:#666">&amp;</span> x() { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>_x; }
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type<span style="color:#666">&amp;</span> y() { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>_y; }
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type<span style="color:#666">&amp;</span> z() { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>_z; }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type<span style="color:#666">&amp;</span> x() { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>_x; }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type<span style="color:#666">&amp;</span> y() { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>_y; }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type<span style="color:#666">&amp;</span> z() { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>_z; }
 
   value_type <span style="color:#06287e">length</span>() <span style="color:#007020;font-weight:bold">const</span> {
-    <span style="color:#007020;font-weight:bold">return</span> std<span style="color:#666">:</span><span style="color:#666">:</span>hypot(<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x(), <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y(), <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z());
+    <span style="color:#007020;font-weight:bold">return</span> std<span style="color:#666">::</span>hypot(<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x(), <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y(), <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z());
   }
 };
 </code></pre></div><p>Here, we use <a href="https://isocpp.org/wiki/faq/const-correctness#const-overloading">const-overloading</a> to create inspector and mutator methods for <code>x</code>, <code>y</code>, and <code>z</code>. We will see why later.</p>
 <p>The first subtype is a bound vector:</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">BoundVec3</span> <span style="color:#666">:</span> Vec3 {
-  <span style="color:#007020;font-weight:bold">using</span> Vec3<span style="color:#666">:</span><span style="color:#666">:</span>Vec3;
+  <span style="color:#007020;font-weight:bold">using</span> Vec3<span style="color:#666">::</span>Vec3;
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> <span style="color:#007020;font-weight:bold">explicit</span> <span style="color:#06287e">BoundVec3</span>(<span style="color:#007020;font-weight:bold">const</span> Vec3<span style="color:#666">&amp;</span> vec3) <span style="color:#666">:</span> Vec3<span style="color:#666">:</span><span style="color:#666">:</span>Vec3{vec3} {}
+  <span style="color:#007020;font-weight:bold">constexpr</span> <span style="color:#007020;font-weight:bold">explicit</span> <span style="color:#06287e">BoundVec3</span>(<span style="color:#007020;font-weight:bold">const</span> Vec3<span style="color:#666">&amp;</span> vec3) <span style="color:#666">:</span> Vec3<span style="color:#666">::</span>Vec3{vec3} {}
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> BoundVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x() <span style="color:#666">+</span><span style="color:#666">=</span> other.x();
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y() <span style="color:#666">+</span><span style="color:#666">=</span> other.y();
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z() <span style="color:#666">+</span><span style="color:#666">=</span> other.z();
+  <span style="color:#007020;font-weight:bold">constexpr</span> BoundVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x() <span style="color:#666">+=</span> other.x();
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y() <span style="color:#666">+=</span> other.y();
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z() <span style="color:#666">+=</span> other.z();
     <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span>;
   }
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> BoundVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
-    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span> <span style="color:#666">+</span><span style="color:#666">=</span> (<span style="color:#666">-</span>other);
+  <span style="color:#007020;font-weight:bold">constexpr</span> BoundVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
+    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span> <span style="color:#666">+=</span> (<span style="color:#666">-</span>other);
   }
 };
 
@@ -164,50 +164,50 @@ UnitVec3 / scalar = FreeVec3
 }
 
 <span style="color:#007020;font-weight:bold">constexpr</span> BoundVec3 <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+</span>(BoundVec3 v1, <span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> v2) {
-  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">+</span><span style="color:#666">=</span> v2;
+  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">+=</span> v2;
 }
 
 <span style="color:#007020;font-weight:bold">constexpr</span> BoundVec3 <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-</span>(BoundVec3 v1, <span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> v2) {
-  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">-</span><span style="color:#666">=</span> v2;
+  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">-=</span> v2;
 }
 </code></pre></div><p>The second subtype is a free vector:</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">FreeVec3</span> <span style="color:#666">:</span> Vec3 {
-  <span style="color:#007020;font-weight:bold">using</span> Vec3<span style="color:#666">:</span><span style="color:#666">:</span>Vec3;
+  <span style="color:#007020;font-weight:bold">using</span> Vec3<span style="color:#666">::</span>Vec3;
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> <span style="color:#007020;font-weight:bold">explicit</span> <span style="color:#06287e">FreeVec3</span>(<span style="color:#007020;font-weight:bold">const</span> Vec3<span style="color:#666">&amp;</span> vec3) <span style="color:#666">:</span> Vec3<span style="color:#666">:</span><span style="color:#666">:</span>Vec3{vec3} {}
+  <span style="color:#007020;font-weight:bold">constexpr</span> <span style="color:#007020;font-weight:bold">explicit</span> <span style="color:#06287e">FreeVec3</span>(<span style="color:#007020;font-weight:bold">const</span> Vec3<span style="color:#666">&amp;</span> vec3) <span style="color:#666">:</span> Vec3<span style="color:#666">::</span>Vec3{vec3} {}
 
   <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">dot</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) <span style="color:#007020;font-weight:bold">const</span> {
-    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x() <span style="color:#666">*</span> other.x() <span style="color:#666">+</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y() <span style="color:#666">*</span> other.y() <span style="color:#666">+</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z() <span style="color:#666">*</span> other.z();
+    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x() <span style="color:#666">*</span> other.x() <span style="color:#666">+</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y() <span style="color:#666">*</span> other.y() <span style="color:#666">+</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z() <span style="color:#666">*</span> other.z();
   }
 
   <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3 <span style="color:#06287e">cross</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) <span style="color:#007020;font-weight:bold">const</span> {
-    <span style="color:#007020;font-weight:bold">return</span> FreeVec3{<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y() <span style="color:#666">*</span> other.z() <span style="color:#666">-</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z() <span style="color:#666">*</span> other.y(),
-                    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z() <span style="color:#666">*</span> other.x() <span style="color:#666">-</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x() <span style="color:#666">*</span> other.z(),
-                    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x() <span style="color:#666">*</span> other.y() <span style="color:#666">-</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y() <span style="color:#666">*</span> other.x()};
+    <span style="color:#007020;font-weight:bold">return</span> FreeVec3{<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y() <span style="color:#666">*</span> other.z() <span style="color:#666">-</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z() <span style="color:#666">*</span> other.y(),
+                    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z() <span style="color:#666">*</span> other.x() <span style="color:#666">-</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x() <span style="color:#666">*</span> other.z(),
+                    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x() <span style="color:#666">*</span> other.y() <span style="color:#666">-</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y() <span style="color:#666">*</span> other.x()};
   }
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x() <span style="color:#666">+</span><span style="color:#666">=</span> other.x();
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y() <span style="color:#666">+</span><span style="color:#666">=</span> other.y();
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z() <span style="color:#666">+</span><span style="color:#666">=</span> other.z();
+  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x() <span style="color:#666">+=</span> other.x();
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y() <span style="color:#666">+=</span> other.y();
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z() <span style="color:#666">+=</span> other.z();
     <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span>;
   }
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
-    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span> <span style="color:#666">+</span><span style="color:#666">=</span> (<span style="color:#666">-</span>other);
+  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-=</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> other) {
+    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span> <span style="color:#666">+=</span> (<span style="color:#666">-</span>other);
   }
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">*</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> value_type scalar) {
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x() <span style="color:#666">*</span><span style="color:#666">=</span> scalar;
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y() <span style="color:#666">*</span><span style="color:#666">=</span> scalar;
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z() <span style="color:#666">*</span><span style="color:#666">=</span> scalar;
+  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">*=</span>(<span style="color:#007020;font-weight:bold">const</span> value_type scalar) {
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x() <span style="color:#666">*=</span> scalar;
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y() <span style="color:#666">*=</span> scalar;
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z() <span style="color:#666">*=</span> scalar;
     <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span>;
   }
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">/</span><span style="color:#666">=</span>(<span style="color:#007020;font-weight:bold">const</span> value_type scalar) {
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>x() <span style="color:#666">/</span><span style="color:#666">=</span> scalar;
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>y() <span style="color:#666">/</span><span style="color:#666">=</span> scalar;
-    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>z() <span style="color:#666">/</span><span style="color:#666">=</span> scalar;
+  <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3<span style="color:#666">&amp;</span> <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">/=</span>(<span style="color:#007020;font-weight:bold">const</span> value_type scalar) {
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>x() <span style="color:#666">/=</span> scalar;
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>y() <span style="color:#666">/=</span> scalar;
+    <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>z() <span style="color:#666">/=</span> scalar;
     <span style="color:#007020;font-weight:bold">return</span> <span style="color:#666">*</span><span style="color:#007020;font-weight:bold">this</span>;
   }
 };
@@ -219,21 +219,21 @@ UnitVec3 / scalar = FreeVec3
 }
 
 <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3 <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">+</span>(FreeVec3 v1, <span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> v2) {
-  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">+</span><span style="color:#666">=</span> v2;
+  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">+=</span> v2;
 }
 
 <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3 <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">-</span>(FreeVec3 v1, <span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> v2) {
-  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">-</span><span style="color:#666">=</span> v2;
+  <span style="color:#007020;font-weight:bold">return</span> v1 <span style="color:#666">-=</span> v2;
 }
 
 <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3 <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">*</span>(FreeVec3 v, <span style="color:#007020;font-weight:bold">const</span> value_type scalar) {
-  <span style="color:#007020;font-weight:bold">return</span> v <span style="color:#666">*</span><span style="color:#666">=</span> scalar;
+  <span style="color:#007020;font-weight:bold">return</span> v <span style="color:#666">*=</span> scalar;
 }
 
 <span style="color:#007020;font-weight:bold">constexpr</span> FreeVec3 <span style="color:#007020;font-weight:bold">operator</span><span style="color:#666">/</span>(FreeVec3 v, <span style="color:#007020;font-weight:bold">const</span> value_type scalar) {
-  <span style="color:#007020;font-weight:bold">return</span> v <span style="color:#666">/</span><span style="color:#666">=</span> scalar;
+  <span style="color:#007020;font-weight:bold">return</span> v <span style="color:#666">/=</span> scalar;
 }
-</code></pre></div><p>Now, onto unit vectors. These are a little different, in the sense that they're not <em>truly</em> Euclidean vectors. Rather, they are an abstraction over free vectors that guarantee a length of <code>1.0</code>.<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> Hence, there is no need of a <code>length()</code> function, and we want to prevent the user from mutating any fields in order to preserve its guarantees. In such a case, it may be more idiomatic to use <a href="https://google.github.io/styleguide/cppguide.html#Inheritance">composition rather than inheritance</a>:</p>
+</code></pre></div><p>Now, onto unit vectors. These are a little different, in the sense that they&rsquo;re not <em>truly</em> Euclidean vectors. Rather, they are an abstraction over free vectors that guarantee a length of <code>1.0</code>.<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> Hence, there is no need of a <code>length()</code> function, and we want to prevent the user from mutating any fields in order to preserve its guarantees. In such a case, it may be more idiomatic to use <a href="https://google.github.io/styleguide/cppguide.html#Inheritance">composition rather than inheritance</a>:</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">UnitVec3</span> {
   UnitVec3(value_type x, value_type y, value_type z)
       <span style="color:#666">:</span> UnitVec3{FreeVec3{x, y, z}} {}
@@ -242,9 +242,9 @@ UnitVec3 / scalar = FreeVec3
 
   <span style="color:#007020;font-weight:bold">explicit</span> <span style="color:#06287e">UnitVec3</span>(<span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> vec3) <span style="color:#666">:</span> inner{vec3 <span style="color:#666">/</span> vec3.length()} {}
 
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">x</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>to_free().x(); }
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">y</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>to_free().y(); }
-  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">z</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>to_free().z(); }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">x</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>to_free().x(); }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">y</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>to_free().y(); }
+  <span style="color:#007020;font-weight:bold">constexpr</span> value_type <span style="color:#06287e">z</span>() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>to_free().z(); }
 
   <span style="color:#007020;font-weight:bold">constexpr</span> <span style="color:#007020;font-weight:bold">const</span> FreeVec3<span style="color:#666">&amp;</span> to_free() <span style="color:#007020;font-weight:bold">const</span> { <span style="color:#007020;font-weight:bold">return</span> inner; }
 
@@ -269,7 +269,7 @@ UnitVec3 / scalar = FreeVec3
   Vec3 direction;
 
   <span style="color:#007020;font-weight:bold">constexpr</span> Vec3 <span style="color:#06287e">at</span>(<span style="color:#007020;font-weight:bold">const</span> value_type t) <span style="color:#007020;font-weight:bold">const</span> {
-    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>origin <span style="color:#666">+</span> (<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>direction <span style="color:#666">*</span> t);
+    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>origin <span style="color:#666">+</span> (<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>direction <span style="color:#666">*</span> t);
   }
 };
 </code></pre></div><p>to this:</p>
@@ -278,7 +278,7 @@ UnitVec3 / scalar = FreeVec3
   UnitVec3 direction;
 
   <span style="color:#007020;font-weight:bold">constexpr</span> BoundVec3 <span style="color:#06287e">at</span>(<span style="color:#007020;font-weight:bold">const</span> value_type t) <span style="color:#007020;font-weight:bold">const</span> {
-    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>origin <span style="color:#666">+</span> (<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-</span><span style="color:#666">&gt;</span>direction <span style="color:#666">*</span> t);
+    <span style="color:#007020;font-weight:bold">return</span> <span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>origin <span style="color:#666">+</span> (<span style="color:#007020;font-weight:bold">this</span><span style="color:#666">-&gt;</span>direction <span style="color:#666">*</span> t);
     <span style="color:#60a0b0;font-style:italic">//                    ^^^^^^^^^^^^^^^^^^^^^ this becomes a FreeVec3
 </span><span style="color:#60a0b0;font-style:italic"></span>  }
 };
@@ -292,7 +292,7 @@ UnitVec3 / scalar = FreeVec3
 <p>In our implementation, we will ignore the case where one or more values of the unit vector become <code>NaN</code>. One might handle this by raising an exception or by allowing the user to check manually via an <code>isnan()</code> function. <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:2" role="doc-endnote">
-<p>A <a href="https://en.cppreference.com/w/cpp/language/converting_constructor">converting constructor</a> would also have worked here, but ideally, <code>FreeVec3</code> should not know about <code>UnitVec3</code>, so this isn't as idiomatic. <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>A <a href="https://en.cppreference.com/w/cpp/language/converting_constructor">converting constructor</a> would also have worked here, but ideally, <code>FreeVec3</code> should not know about <code>UnitVec3</code>, so this isn&rsquo;t as idiomatic. <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:3" role="doc-endnote">
 <p>Another approach would be to make the member variables <code>x</code>, <code>y</code>, and <code>z</code> public, and use const member variables for <code>UnitVec3</code>, but that comes with <a href="https://www.drdobbs.com/the-problem-with-const-data-members/184403306">its own set of problems</a>. <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>

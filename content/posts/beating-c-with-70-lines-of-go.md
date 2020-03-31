@@ -218,15 +218,13 @@ For our implementation, we want our code to be performant on _all_ devices, so w
 ```go
 func ChunkCounter(chunks <-chan Chunk, counts chan<- Count) {
     totalCount := Count{}
-    for {
-        chunk, ok := <-chunks
-        if !ok {
-            break
-        }
+
+    for chunk := range chunks
         count := GetCount(chunk)
         totalCount.LineCount += count.LineCount
         totalCount.WordCount += count.WordCount
     }
+
     counts <- totalCount
 }
 ```
@@ -287,7 +285,7 @@ Let's run this and see how it compares to the previous results:
 | `wc`         |       1 GB |       5.56 s |    2036 KB |
 | `wc-channel` |       1 GB |       2.22 s |    6752 KB |
 
-Our `wc` is now a lot faster, but there has been quite a regression in memory usage. In particular, notice how our input loop allocates memory at every iteration! Channels are a great abstraction over sharing memory, but for some use cases, simply _not_ using channels can improve performance tremendously.
+Our `wc` is now a lot faster, but there has been quite a regression in memory usage. In particular, notice how our input loop allocates memory at every iteration! Channels are a great abstraction over sharing memory, but they aren't always the best tool for the job.
 
 ## Better parallelization
 
