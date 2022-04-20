@@ -5,10 +5,6 @@
     <link>https://ajeetdsouza.github.io/blog/tags/</link>
     <description>Recent content in Tags on Ajeet D&#39;Souza</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    
-	<atom:link href="https://ajeetdsouza.github.io/blog/tags/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <language>en-us</language><atom:link href="https://ajeetdsouza.github.io/blog/tags/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>

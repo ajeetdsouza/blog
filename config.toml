@@ -8,7 +8,7 @@ publishDir = "docs"
 pygmentsCodeFences = true
 pygmentsStyle = "friendly"
 
-googleAnalytics = "UA-25405378-2"
+googleAnalytics = "G-C3QZ882E3V"
 
 [blackfriday]
 hrefTargetBlank = true
